@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This module implements community detection.
+Il y a encore des problèmes avec la fonction __recuit (version dans laquelle on permet à un sommet de sortir de toute communauté). 
+d'autres fonctions doivent ensuite être mise à jour.
 """
 from __future__ import print_function
 
@@ -660,7 +661,24 @@ def __recuit(nbt, nbi, graph, status, weight_key, resolution, t0, tt, partition=
                      neigh_communities.get(com_node, 0.), status)
             if len(neigh_communities.items()) == 0:
                 continue
-            neighcom, neighnode = random.choice(list(neigh_communities.items()))   
+            neighcom, neighnode = random.choice(list(neigh_communities.items())+[(0,0)])
+            if neighcom == 0 and neighnode == 0:
+                incr = remove_cost
+                if incr > 0:
+                    nb_com = __insert(node, 0,'weight', status, graph, nb_com)
+                    if last_mod-curr_mod > __MIN:
+                        partition_best_l = __renumber(status.node2com)
+                        curr_mod= last_mod
+                        #print(last_mod)
+                        nt=nbtt
+                elif t>__MIN:
+                    p = random.random()
+                    if p < exp(incr/t):
+                        nb_com = __insert(node, 0,'weight', status, graph, nb_com)
+                    else:
+                        __insert(node, com_node,
+                                neigh_communities.get(com_node, 0.), status)
+                continue        
             incr = remove_cost + resolution * neighnode - \
                     status.degrees.get(neighcom, 0.) * degc_totw
             if incr > 0:
